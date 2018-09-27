@@ -35,5 +35,9 @@ class DBSQLITE(object):
         rv = cur.fetchall()
         cur.close()
         return rv if rv else None
+    def logUserInfo(self, args = ()):
+        return self.query_db('INSERT INTO askLegalTrackerTable(user, nodes, entity,where_clause,created_date)  VALUES (?, ?, ?, ?, ?)', args=args)
+    def getUserInfo(self, args = ()):
+        return self.query_db('SELECT nodes, entity, where_clause FROM askLegalTrackerTable')
     def __exit__(self, type, value, traceback):
         self.close()

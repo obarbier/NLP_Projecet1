@@ -38,12 +38,16 @@ def legalContact(entity):
 def financialInfo(entity):
     r = Neo4j.financialInfoIntentDAO(ext_entity=entity)
     return r
-
+def default(enity):
+    print('Since Intent is Low we will run default')
+    r = Neo4j.defaultDAO(ext_entity=entity)
+    return r
 switcher = {
 'greet' : greet,
 'thankyou' : thankyou,
 'legalContact' : legalContact,
-'financialInfo': financialInfo
+'financialInfo': financialInfo,
+'default': default
 }
 # map the inputs to the function blocks
 def Take_Action(argument, entity):
@@ -66,8 +70,7 @@ class HelloWorld(Resource):
            # where_clause TEXT,
            # created_date INTEGER
         with DBSQLITE() as askLegal_db:
-            askLegal_db.query_db('INSERT INTO askLegalTrackerTable(user, nodes, entity,where_clause,created_date)  VALUES (?, ?, ?, ?, ?)',args=['obarbier',':Person','legalContact',"where p.name = 'test'",123])
-            query_res = askLegal_db.query_db('SELECT * FROM askLegalTrackerTable')
+            query_res = askLegal_db.getUserInfo()
             for res in query_res:
                 print(res['user'])
         return {'hello': 'world'}
@@ -78,7 +81,12 @@ class HelloWorld(Resource):
          print(parse_sentence)
          entity = parse_sentence['entities'];
          intent = parse_sentence['intent'];
-         return Take_Action(intent['name'],entity);
+         if entity and intent['confidence'] <= 0.37: # hard coded 0.37. However in production will need to query this from a database
+             return Take_Action('default',entity);
+         elif not entity and intent['confidence'] <= 0.37: # hard coded 0.37. However in production will need to query this from a database
+             return 'We will not consider this option for Now. Please post qestion to Wiki page.'
+         else:
+             return Take_Action(intent['name'],entity);
 
 api.add_resource(HelloWorld, '/')
 
