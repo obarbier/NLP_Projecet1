@@ -1,7 +1,13 @@
 # Python libraries
 from flask import  Flask, jsonify
 from flask_restful import reqparse, abort, Resource, Api
+from AskLegalSQLITE import DBSQLITE
 app = Flask(__name__)
+
+#initialize SQLDatabase
+with DBSQLITE() as askLegal_db:
+    askLegal_db.init_db();
+
 api = Api(app)
 
 
@@ -54,6 +60,16 @@ Neo4j = LegalBotDataExtract(uri = "bolt://localhost:7687", user = "neo4j", passw
 
 class HelloWorld(Resource):
     def get(self):
+           # user text,
+           # nodes TEXT,
+           # entity TEXT,
+           # where_clause TEXT,
+           # created_date INTEGER
+        with DBSQLITE() as askLegal_db:
+            askLegal_db.query_db('INSERT INTO askLegalTrackerTable(user, nodes, entity,where_clause,created_date)  VALUES (?, ?, ?, ?, ?)',args=['obarbier',':Person','legalContact',"where p.name = 'test'",123])
+            query_res = askLegal_db.query_db('SELECT * FROM askLegalTrackerTable')
+            for res in query_res:
+                print(res['user'])
         return {'hello': 'world'}
     def post(self):
          args= parser.parse_args()

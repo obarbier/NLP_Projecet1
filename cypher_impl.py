@@ -1,4 +1,5 @@
 from neo4j.v1 import GraphDatabase
+from AskLegalSQLITE import DBSQLITE
 import jsonpickle
 import json
 
@@ -21,13 +22,22 @@ class LegalBotDataExtract(object):
     @staticmethod
     def _legalContactIntentQuery(tx, ext_entity):
         query = "MATCH path = (p:Person)-[:is_legal_contact_for]->(n) Where 1 = 1 "
-        for x in ext_entity:
-            if x['entity'] == 'PERSON':
-                query =  query + 'and p.Name = "' + x['value'] + '"'
-            if x['entity'] == 'GPE':
-                query =  query + 'and n.Country = "' + x['value']+ '"'
-            if x['entity'] == 'ORG':
-                query =  query + 'and n.AcctName = "' + x['value']+ '"'
+        if not ext_entity:
+            with DBSQLITE() as askLegal_db:
+                for row in askLegal_db.query_db('SELECT entity, where_clause FROM askLegalTrackerTable'):
+                    query =  query + row['where_clause']
+                    print(query)
+        else:
+            for x in ext_entity:
+                if x['entity'] == 'PERSON':
+                    where_clause = 'and p.Name = "' + x['value'] + '"'
+                if x['entity'] == 'GPE':
+                    where_clause = 'and n.Country = "' + x['value']+ '"'
+                if x['entity'] == 'ORG':
+                    where_clause = 'and n.AcctName = "' + x['value']+ '"'
+                query =  query + where_clause
+            with DBSQLITE() as askLegal_db:
+                askLegal_db.query_db('INSERT INTO askLegalTrackerTable(user, nodes, entity,where_clause,created_date)  VALUES (?, ?, ?, ?, ?)',args=['obarbier',':test_1', x['entity'], where_clause, 123])
         query = query + 'RETURN path LIMIT 5';
         print(query)
         results = tx.run(query)
@@ -59,13 +69,22 @@ class LegalBotDataExtract(object):
     @staticmethod
     def financialInfoIntentQuery(tx, ext_entity):
         query = "MATCH path = (acct:GES_CustomerAcct)-[:has_finance_data]->(n) Where 1 = 1 "
-        for x in ext_entity:
-            if x['entity'] == 'PERSON':
-                query =  query + 'and p.Name = "' + x['value'] + '"'
-            if x['entity'] == 'GPE':
-                query =  query + 'and n.Country = "' + x['value']+ '"'
-            if x['entity'] == 'ORG':
-                query =  query + 'and acct.AcctName = "' + x['value']+ '"'
+        if not ext_entity:
+            with DBSQLITE() as askLegal_db:
+                for row in askLegal_db.query_db('SELECT entity, where_clause FROM askLegalTrackerTable'):
+                    query =  query + row['where_clause']
+                    print(query)
+        else:
+            for x in ext_entity:
+                if x['entity'] == 'PERSON':
+                    where_clause = 'and p.Name = "' + x['value'] + '"'
+                if x['entity'] == 'GPE':
+                    where_clause = 'and n.Country = "' + x['value']+ '"'
+                if x['entity'] == 'ORG':
+                    where_clause = 'and n.AcctName = "' + x['value']+ '"'
+                query =  query + where_clause
+            with DBSQLITE() as askLegal_db:
+                askLegal_db.query_db('INSERT INTO askLegalTrackerTable(user, nodes, entity,where_clause,created_date)  VALUES (?, ?, ?, ?, ?)',args=['obarbier',':test_1', x['entity'], where_clause, 123])
         query = query + 'RETURN path LIMIT 5';
         print(query)
         results = tx.run(query)
